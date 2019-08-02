@@ -39,6 +39,7 @@ function post(mpn) {
       return res.body.data.part
     })
     .catch(err => {
+      console.error(`Partinfo error with`, mpn)
       console.error(err)
       return {}
     })
