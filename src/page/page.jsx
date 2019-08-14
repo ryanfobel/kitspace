@@ -9,6 +9,7 @@ const TitleBar = require('../title_bar')
 const FadeImage = require('../fade_image')
 const BuyParts = require('../buy_parts/buy_parts')
 const Readme = require('../readme')
+const semantic = require('semantic-ui-react')
 
 const info = require('../info.json')
 const description =
@@ -26,13 +27,9 @@ const Page = React.createClass({
   render() {
     const idText = info.id
       .split('/')
-      .slice(2)
+      .slice(-1)
       .join(' / ')
     const titleText = `${idText} on Kitspace`
-    const subtitleText = info.id
-      .split('/')
-      .slice(0, 2)
-      .join(' / ')
     return (
       <div>
         <Helmet>
@@ -56,11 +53,9 @@ const Page = React.createClass({
           <meta name="twitter:image" content={metaImage} />
         </Helmet>
         <div className="page">
-          <TitleBar submissionButton={true}>
-            <div className="titleText">{idText}</div>
-            <div className="subtitleText">{subtitleText}</div>
-          </TitleBar>
+          <TitleBar route={'/boards/' + info.id} />
           <div className="pageContainer">
+            <img style={{display: 'none'}} src="/images/flags.png" />
             <InfoBar info={info} />
             <BoardShowcase zipUrl={zipUrl}>
               <FadeImage src="images/top.svg" />

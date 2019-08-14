@@ -6,7 +6,6 @@ const util = require('./util')
 const Steps = require('./steps')
 const UrlSubmit = require('./url_submit')
 
-const TitleBar = require('../title_bar')
 const InfoBar = require('../page/info_bar')
 
 const Step3 = React.createClass({
@@ -17,14 +16,18 @@ const Step3 = React.createClass({
       ? ''
       : 'Add a kitspace.yaml with "summary" and' +
         ' "site" fields to appear at the top of your page'
-    const info = board.yaml || {}
-    info.repo = board.url
-    infoBar = (
-      <semantic.Segment>
-        <InfoBar info={info} />
-        <semantic.Label attached="top left">{text}</semantic.Label>
-      </semantic.Segment>
-    )
+    if (board.status === 'done') {
+      const info = board.yaml || {}
+      info.repo = board.url
+      const url = new URL(board.url)
+      info.id = url.host + url.pathname
+      infoBar = (
+        <semantic.Segment>
+          <InfoBar info={info} />
+          <semantic.Label attached="top left">{text}</semantic.Label>
+        </semantic.Segment>
+      )
+    }
     if (board.readme.rendered) {
       nextButton = (
         <semantic.Button
@@ -56,9 +59,6 @@ const Step3 = React.createClass({
     )
     return (
       <div className="Step Step3">
-        <TitleBar>
-          <div className="titleText">{'Submit a project'}</div>
-        </TitleBar>
         <semantic.Container>
           <Steps setStep={this.props.setStep} active={3} />
           <Markdown className="instructions" source={instructionText} />

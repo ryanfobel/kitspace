@@ -3,6 +3,8 @@ let config, uglifyjs
 const ninjaBuildGen = require('ninja-build-gen')
 const globule = require('globule')
 const path = require('path')
+const yaml = require('js-yaml')
+const fs = require('fs')
 
 if (process.argv[2] === 'production') {
   config = 'production'
@@ -118,7 +120,7 @@ ninja.rule('autoprefix')
 
 ninja.edge('build/vendor.js').using('browserify-require')
 
-const images = globule.find('src/images/*')
+const images = globule.find('src/images/**/*', {filter: 'isFile'})
 for (var f of images) {
   ninja
     .edge(f.replace('src', 'build'))
@@ -126,7 +128,32 @@ for (var f of images) {
     .using('copy')
 }
 
-const boardFolders = globule.find('boards/*/*/*', {filter: 'isDirectory'})
+let boardFolders = globule.find('boards/*/*/*', {filter: 'isDirectory'})
+
+boardFolders.forEach((folder, index) => {
+  let info
+  let file
+  if (fs.existsSync(`${folder}/kitnic.yaml`)) {
+    file = fs.readFileSync(`${folder}/kitnic.yaml`)
+  } else if (fs.existsSync(`${folder}/kitspace.yaml`)) {
+    file = fs.readFileSync(`${folder}/kitspace.yaml`)
+  } else if (fs.existsSync(`${folder}/kitspace.yml`)) {
+    file = fs.readFileSync(`${folder}/kitspace.yml`)
+  }
+  if (file != null) {
+    info = yaml.safeLoad(file)
+  } else {
+    info = {}
+  }
+
+  if (info.multi) {
+    for (let project in info.multi) {
+      projectPath = path.join(folder, project)
+      boardFolders.push(projectPath)
+    }
+    boardFolders.splice(index, 1)
+  }
+})
 
 const jsSrc = globule.find(['src/**/*.js', 'src/**/*.jsx'])
 
@@ -162,6 +189,30 @@ ninja
   .using('sass')
 
 ninja
+  .edge('build/.temp/bom-builder/bom-builder.css')
+  .from('src/bom-builder/bom-builder.scss')
+  .need(sassSrc)
+  .assign('path', 'src/')
+  .using('sass')
+
+ninja
+  .edge('build/.temp/1-click-bom/1-click-bom.css')
+  .from('src/1-click-bom/1-click-bom.scss')
+  .need(sassSrc)
+  .assign('path', 'src/')
+  .using('sass')
+
+ninja
+  .edge('build/bom-builder/bom-builder.css')
+  .from('build/.temp/bom-builder/bom-builder.css')
+  .using('autoprefix')
+
+ninja
+  .edge('build/1-click-bom/1-click-bom.css')
+  .from('build/.temp/1-click-bom/1-click-bom.css')
+  .using('autoprefix')
+
+ninja
   .edge('build/.temp/page.css')
   .from('src/page/page.scss')
   .need(sassSrc)
@@ -195,6 +246,18 @@ ninja
   .from('build/.temp/index/render_index.jsx')
   .need(jsMainTargets)
   .need('build/.temp/boards.json')
+  .using('browserify')
+
+ninja
+  .edge('build/bom-builder/app.js')
+  .from('build/.temp/bom-builder/render_bom-builder.jsx')
+  .need(jsMainTargets)
+  .using('browserify')
+
+ninja
+  .edge('build/1-click-bom/app.js')
+  .from('build/.temp/1-click-bom/render_1-click-bom.jsx')
+  .need(jsMainTargets)
   .using('browserify')
 
 ninja
@@ -263,12 +326,24 @@ if (config === 'production') {
     .edge('build/_redirects')
     .from('src/_redirects')
     .using('copy')
+  ninja
+    .edge('build/_headers')
+    .from('src/_headers')
+    .using('copy')
 }
+
+ninja
+  .rule('sed')
+  .run(
+    "sed -e 's/themes\\/default\\/assets\\/images\\/flags\\.png/\\/images\\/flags.png/' $in > $out"
+  )
+  .description('$command')
 
 ninja
   .edge('build/semantic.min.css')
   .from('node_modules/semantic-ui-css/semantic.min.css')
-  .using('copy')
+  .using('sed')
+
 globule
   .find('node_modules/semantic-ui-css/themes/default/assets/fonts/*')
   .forEach(file => {
@@ -277,6 +352,11 @@ globule
       .from(file)
       .using('copy')
   })
+
+ninja
+  .edge('build/images/flags.png')
+  .from('node_modules/semantic-ui-css/themes/default/assets/images/flags.png')
+  .using('copy')
 
 ninja
   .edge('clean')

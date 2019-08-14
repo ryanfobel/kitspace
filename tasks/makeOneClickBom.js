@@ -4,16 +4,15 @@ const utils = require('./utils/utils')
 if (require.main !== module) {
   module.exports = function(config) {
     let deps
-    const targets = ['build/index.html']
+    const targets = ['build/1-click-bom/index.html']
     if (config === 'production') {
       deps = [
-        'build/.temp/index/index.jsx',
-        'src/index/index.html',
-        'build/.temp/boards.json'
+        'build/.temp/1-click-bom/1-click-bom.jsx',
+        'src/1-click-bom/1-click-bom.html',
       ]
       return {deps, targets, moduleDep: true}
     } else if (config === 'dev') {
-      deps = ['src/index/index.html']
+      deps = ['src/1-click-bom/1-click-bom.html']
       return {deps, targets, moduleDep: false}
     }
   }

@@ -52,6 +52,7 @@ color: The solder resist color of the preview rendering. Can be one of:
        - yellow
 bom: A path to your 1-click-bom in case it isn't `1-click-bom.tsv`.
 gerbers: A path to your folder of gerbers in case it isn't `gerbers/`.
+multi: Identifier field only used if the repository contains multiple projects.
 
 ```
 Paths should be in UNIX style (i.e. use `/` not `\`) and relative to the root
@@ -116,6 +117,81 @@ bom: manufacture/advanced-example-BOM.tsv
 gerbers: manufacture/gerbers-and-drills
 ```
 
+#### The multi field
+
+> NOTE: `multi` doesn't yet work with the [kitspace.org/submit](https://kitspace.org/submit) preview tool. See issue [#182](https://github.com/kitspace/kitspace/issues/182).
+
+Kitspace supports multiple projects in one repository with the `multi` field. When multiple projects exist, `multi` will always be the first field in the `kitspace.yaml`, with the paths to your projects folder nested underneath.
+
+```
+├── kitspace.yaml
+├── project_one
+│   ├── 1-click-bom.tsv
+│   ├── README.md
+│   └── gerbers
+│       ├── example.cmp
+│       ├── example.drd
+│       ├── example.dri
+│        ...
+│       ├── example.stc
+│       └── example.sts
+└── project_two
+    ├── 1-click-bom.tsv
+    ├── README.md
+    └── gerbers
+        ├── example.cmp
+        ├── example.drd
+        ├── example.dri
+         ...
+        ├── example.stc
+        └── example.sts
+
+```
+
+with `kitspace.yaml` containing:
+
+```yaml
+multi:
+    project_one:
+        summary: First project in a repository.
+        color: blue
+        site: https://example-one.com
+    project_two:
+        summary: Second project in a repository.
+        color: red
+        site: https://example-two.com
+```
+
+If you want to use custom paths for `bom` and `gerbers` then note that these are from the root of the repository. There is currently no way to change the path of the README (see issue [#183](https://github.com/kitspace/kitspace/issues/183)).
+
+E.g.
+
+```
+├── kitspace.yaml
+├── manufacturing_outputs
+│   └── project_one_gerbers
+│       ├── example.cmp
+│       ├── example.drd
+│       ├── example.dri
+│        ...
+│       ├── example.stc
+│       └── example.sts
+├── project_one
+    ├── BOM.csv
+    └── README.md
+└── project_two
+    ├── README.md
+    ...
+```
+
+```yaml
+multi:
+    project_one:
+        bom: project_one/BOM.csv
+        gerbers: manufacturing_outputs/project_one_gerbers
+    project_two:
+      ...
+```
 
 ## Development
 
@@ -166,16 +242,17 @@ Services used are:
 
 ### Requirements
 
-- [Nodejs](https://nodejs.org) >= 6
+- [Nodejs](https://nodejs.org) version 6 (v6.17.1)
 - [fswatch](http://emcrisostomo.github.io/fswatch/) on OSX/Windows or inotify-tools on Linux
 - [Ninja Build](https://github.com/ninja-build/ninja/releases) >= 1.5.1
-- The rest of the dependencies can be retrieved via `npm install`
+- [Yarn](https://yarnpkg.com/) to ensure the correct dependencies are installed
+- The rest of the dependencies can be retrieved via `yarn install`
 
 ### Running a local dev server
 
 - Get requirements above and make sure executables are on your path
-- `npm install` (or `yarn install`)
-- `npm start` (or `yarn start`)
+- `yarn install`
+- `yarn start` (or `npm start`)
 - Point your browser at `http://127.0.0.1:8080`. The script should watch for
 file-saves and re-build when you change a source file.
 
