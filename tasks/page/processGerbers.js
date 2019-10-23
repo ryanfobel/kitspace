@@ -47,14 +47,14 @@ if (require.main !== module) {
       .find(gerberPath)
       .map(p => path.relative(repoRootPath, p))
 
-    const gerbers = gerberFiles(files, info.gerbers).map(p =>
-      path.join(repoRootPath, p)
-    )
-    if (gerbers.length === 0) {
+    const {gerbers, types} = gerberFiles(files, info.gerbers)
+
+    const projectGerbers = gerbers.map(p => path.join(repoRootPath, p))
+    if (projectGerbers.length === 0) {
       console.error(`No gerbers found for ${repoRootPath}.`)
       process.exit(1)
     }
-    const deps = [folder].concat(gerbers)
+    const deps = [folder].concat(projectGerbers)
     const buildFolder = folder.replace('boards', 'build/boards')
     let version = cp.execSync(`cd ${folder} && git log -n 1 --oneline`, {
       encoding: 'utf8'

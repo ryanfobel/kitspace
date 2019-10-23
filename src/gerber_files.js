@@ -15,7 +15,7 @@ function gerberFiles(files, gerberPath) {
     return prev || possibleTypes.indexOf(t) !== possibleTypes.lastIndexOf(t)
   }, false)
   if (!duplicates) {
-    return possibleGerbers
+    return {gerbers: possibleGerbers, types: possibleTypes}
   }
   //if we have duplicates we reduce it down to the folder with the most
   //gerbers
@@ -30,7 +30,10 @@ function gerberFiles(files, gerberPath) {
     }
     return prev
   })
-  return possibleGerbers.filter(f => path.dirname(f) === gerberFolder)
+  layers.filter(layer => path.dirname(layer.path) === gerberFolder)
+  const gerbers = layers.map(({path}) => path)
+  const types = layers.map(({type}) => type)
+  return {gerbers, types}
 }
 
 module.exports = gerberFiles
